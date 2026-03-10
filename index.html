@@ -403,8 +403,10 @@ nav .container { display: flex; justify-content: space-between; align-items: cen
 .terminal-dot.g { background: #28C840; }
 .terminal-body {
   padding: 16px; font-size: 13px; line-height: 1.8;
-  color: var(--text2); height: 260px; overflow: hidden;
+  color: var(--text2); height: 320px; overflow-y: auto; overflow-x: hidden;
+  scroll-behavior: smooth;
 }
+.terminal-body::-webkit-scrollbar { display: none; }
 .terminal-body .prompt { color: var(--accent); }
 .terminal-body .cmd { color: var(--text); }
 .terminal-body .output { color: var(--text2); }
@@ -440,7 +442,7 @@ footer p { font-size: 13px; color: var(--text2); }
   .cta { padding: 40px 20px; }
   .activity-ticker { left: 10px; right: 10px; bottom: 10px; max-width: none; }
   .terminal { margin: 24px auto 0; }
-  .terminal-body { height: 220px; font-size: 12px; }
+  .terminal-body { height: 280px; font-size: 12px; }
   /* Tap feedback on mobile */
   .tilt-card { transition: border-color 0.4s, box-shadow 0.4s; }
   .btn-primary { transition: box-shadow 0.3s, background 0.3s; }
@@ -1086,14 +1088,16 @@ if (!isMobile) {
     }
     const line = lines[lineIdx];
     lineIdx++;
+    function scrollDown() { body.scrollTop = body.scrollHeight; }
     if (line.type === 'newline') {
       body.innerHTML += '<br>';
+      scrollDown();
       setTimeout(runTerminal, 100);
     } else if (line.type === 'cursor') {
       body.innerHTML += '<span class="terminal-cursor"></span>';
+      scrollDown();
       setTimeout(() => { body.innerHTML = ''; lineIdx = 0; runTerminal(); }, 4000);
     } else if (line.type === 'cmd') {
-      // Type out character by character
       const span = document.createElement('span');
       span.className = 'cmd';
       body.appendChild(span);
@@ -1101,6 +1105,7 @@ if (!isMobile) {
       function typeChar() {
         span.textContent += line.text[i];
         i++;
+        scrollDown();
         if (i < line.text.length) setTimeout(typeChar, line.delay);
         else setTimeout(runTerminal, 300);
       }
@@ -1114,6 +1119,7 @@ if (!isMobile) {
         if (line.type === 'success') span.textContent = ' ' + line.text;
         body.appendChild(span);
         if (line.type !== 'prompt') body.innerHTML += '<br>';
+        scrollDown();
         setTimeout(runTerminal, 100);
       }, delay);
     }
