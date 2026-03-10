@@ -403,7 +403,7 @@ nav .container { display: flex; justify-content: space-between; align-items: cen
 .terminal-dot.g { background: #28C840; }
 .terminal-body {
   padding: 16px; font-size: 13px; line-height: 1.8;
-  color: var(--text2); min-height: 120px;
+  color: var(--text2); height: 260px; overflow: hidden;
 }
 .terminal-body .prompt { color: var(--accent); }
 .terminal-body .cmd { color: var(--text); }
@@ -440,6 +440,7 @@ footer p { font-size: 13px; color: var(--text2); }
   .cta { padding: 40px 20px; }
   .activity-ticker { left: 10px; right: 10px; bottom: 10px; max-width: none; }
   .terminal { margin: 24px auto 0; }
+  .terminal-body { height: 220px; font-size: 12px; }
   /* Tap feedback on mobile */
   .tilt-card { transition: border-color 0.4s, box-shadow 0.4s; }
   .btn-primary { transition: box-shadow 0.3s, background 0.3s; }
