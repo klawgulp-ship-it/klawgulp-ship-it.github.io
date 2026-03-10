@@ -120,9 +120,10 @@ nav .container { display: flex; justify-content: space-between; align-items: cen
   background: rgba(200,255,50,0.06); border: 1px solid rgba(200,255,50,0.15);
   border-radius: 100px; padding: 6px 16px;
   font-size: 13px; color: var(--accent); font-weight: 600; margin-bottom: 24px;
-  animation: badgeFade 1s ease-out 0.2s both;
   position: relative;
+  opacity: 0;
 }
+.hero-badge.typed { opacity: 1; }
 .hero-badge::before {
   content: '';
   position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
@@ -130,6 +131,15 @@ nav .container { display: flex; justify-content: space-between; align-items: cen
   background: var(--accent);
   animation: livePulse 2s ease-in-out infinite;
 }
+/* Typing cursor */
+.type-cursor::after {
+  content: '|';
+  color: var(--accent);
+  animation: blink 0.6s step-end infinite;
+  margin-left: 2px;
+  font-weight: 400;
+}
+@keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
 @keyframes livePulse {
   0%, 100% { opacity: 1; box-shadow: 0 0 0 0 var(--glow-strong); }
   50% { opacity: 0.6; box-shadow: 0 0 8px 4px var(--glow); }
@@ -138,7 +148,7 @@ nav .container { display: flex; justify-content: space-between; align-items: cen
 .hero h1 {
   font-size: clamp(36px, 6vw, 64px); font-weight: 800;
   letter-spacing: -2px; line-height: 1.1; margin-bottom: 20px;
-  animation: heroTitle 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both;
+  min-height: 1.1em;
 }
 @keyframes heroTitle { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
 .hero h1 .accent {
@@ -154,16 +164,22 @@ nav .container { display: flex; justify-content: space-between; align-items: cen
 .hero p {
   font-size: 18px; color: var(--text2); max-width: 600px;
   margin: 0 auto 32px; line-height: 1.7;
-  animation: heroTitle 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.5s both;
+  opacity: 0; transition: opacity 0.6s, transform 0.6s cubic-bezier(0.16,1,0.3,1);
+  transform: translateY(20px);
 }
+.hero p.show { opacity: 1; transform: translateY(0); }
 .hero-buttons {
   display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
-  animation: heroTitle 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.7s both;
+  opacity: 0; transition: opacity 0.6s 0.1s, transform 0.6s 0.1s cubic-bezier(0.16,1,0.3,1);
+  transform: translateY(20px);
 }
+.hero-buttons.show { opacity: 1; transform: translateY(0); }
 .hero-stats {
   display: flex; gap: 48px; justify-content: center; margin-top: 60px; flex-wrap: wrap;
-  animation: heroTitle 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.9s both;
+  opacity: 0; transition: opacity 0.6s 0.2s, transform 0.6s 0.2s cubic-bezier(0.16,1,0.3,1);
+  transform: translateY(20px);
 }
+.hero-stats.show { opacity: 1; transform: translateY(0); }
 .hero-stats .stat { text-align: center; }
 .hero-stats .stat-value {
   font-size: 36px; font-weight: 800; color: var(--accent);
@@ -352,9 +368,9 @@ footer p { font-size: 13px; color: var(--text2); }
 
 <section class="hero">
   <div class="container">
-    <div class="hero-badge">&nbsp;&nbsp;&nbsp;Available for projects — Starting immediately</div>
-    <h1>I build web apps<br><span class="accent">stupidly fast.</span></h1>
-    <p>Senior full-stack developer with an AI-assisted workflow. I ship production React + Node.js apps in days that would take others months. Your idea, deployed and collecting payments.</p>
+    <div class="hero-badge" id="heroBadge"><span class="type-cursor" id="badgeText"></span></div>
+    <h1 id="heroH1"></h1>
+    <p id="heroP">Senior full-stack developer with an AI-assisted workflow. I ship production React + Node.js apps in days that would take others months. Your idea, deployed and collecting payments.</p>
     <div class="hero-buttons">
       <a href="#contact" class="btn btn-primary">Start a Project</a>
       <a href="#projects" class="btn btn-secondary">See My Work</a>
@@ -561,6 +577,86 @@ footer p { font-size: 13px; color: var(--text2); }
 </footer>
 
 <script>
+// ─── Typewriter Engine ───
+function typeText(el, text, speed, callback) {
+  let i = 0;
+  el.textContent = '';
+  function tick() {
+    el.textContent = text.slice(0, i + 1);
+    i++;
+    if (i < text.length) {
+      setTimeout(tick, speed);
+    } else {
+      el.classList.remove('type-cursor');
+      if (callback) callback();
+    }
+  }
+  tick();
+}
+
+// ─── Hero Typing Sequence ───
+(function heroSequence() {
+  const badge = document.getElementById('heroBadge');
+  const badgeText = document.getElementById('badgeText');
+  const h1 = document.getElementById('heroH1');
+  const heroP = document.getElementById('heroP');
+  const buttons = document.querySelector('.hero-buttons');
+  const stats = document.querySelector('.hero-stats');
+
+  // Step 1: Badge types in
+  setTimeout(() => {
+    badge.classList.add('typed');
+    typeText(badgeText, 'Available for projects — Starting immediately', 30, () => {
+      // Step 2: Headline types
+      h1.innerHTML = '<span class="type-cursor" id="h1Line1"></span>';
+      const line1 = document.getElementById('h1Line1');
+      typeText(line1, 'I build web apps', 45, () => {
+        // Step 3: Accent line types
+        h1.innerHTML = 'I build web apps<br><span class="accent type-cursor" id="h1Line2"></span>';
+        const line2 = document.getElementById('h1Line2');
+        typeText(line2, 'stupidly fast.', 55, () => {
+          // Step 4: Fade in the rest
+          heroP.classList.add('show');
+          buttons.classList.add('show');
+          setTimeout(() => {
+            stats.classList.add('show');
+            // Step 5: Animate stat numbers
+            setTimeout(animateStats, 300);
+          }, 200);
+        });
+      });
+    });
+  }, 300);
+})();
+
+// ─── Stat Counter/Typewriter ───
+function animateStats() {
+  document.querySelectorAll('.stat-value').forEach(el => {
+    const count = el.dataset.count;
+    const text = el.dataset.text;
+    if (count) {
+      let n = 0;
+      const target = parseInt(count);
+      const step = () => {
+        n += 1;
+        el.textContent = n + '+';
+        if (n < target) setTimeout(step, 120);
+      };
+      step();
+    } else if (text) {
+      el.textContent = '';
+      let i = 0;
+      const chars = text.split('');
+      const type = () => {
+        el.textContent = chars.slice(0, i + 1).join('');
+        i++;
+        if (i < chars.length) setTimeout(type, 80);
+      };
+      type();
+    }
+  });
+}
+
 // ─── Cursor Glow ───
 const glow = document.getElementById('cursorGlow');
 let mx = 0, my = 0, gx = 0, gy = 0;
@@ -600,41 +696,6 @@ const observer = new IntersectionObserver((entries) => {
   });
 }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
 revealEls.forEach(el => observer.observe(el));
-
-// ─── Number Counter Animation ───
-let counted = false;
-const statsObserver = new IntersectionObserver((entries) => {
-  entries.forEach(entry => {
-    if (entry.isIntersecting && !counted) {
-      counted = true;
-      document.querySelectorAll('.stat-value').forEach(el => {
-        const count = el.dataset.count;
-        const text = el.dataset.text;
-        if (count) {
-          let n = 0;
-          const target = parseInt(count);
-          const step = () => {
-            n += 1;
-            el.textContent = n + '+';
-            if (n < target) requestAnimationFrame(step);
-          };
-          step();
-        } else if (text) {
-          const chars = text.split('');
-          let i = 0;
-          el.textContent = '';
-          const type = () => {
-            el.textContent = chars.slice(0, i + 1).join('');
-            i++;
-            if (i < chars.length) setTimeout(type, 80);
-          };
-          type();
-        }
-      });
-    }
-  });
-}, { threshold: 0.5 });
-document.querySelectorAll('.hero-stats').forEach(el => statsObserver.observe(el));
 
 // ─── Form Submission ───
 async function submitLead(e) {
