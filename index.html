@@ -88,6 +88,30 @@ nav .container { display: flex; justify-content: space-between; align-items: cen
 }
 .nav-links a:not(.btn):hover::after { width: 100%; }
 
+/* ─── Hamburger ─── */
+.hamburger { display: none; background: none; border: none; cursor: pointer; padding: 4px; z-index: 201; }
+.hamburger svg { display: block; }
+.hamburger .line { transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); transform-origin: center; }
+.hamburger.open .line1 { transform: translateY(6px) rotate(45deg); }
+.hamburger.open .line2 { opacity: 0; }
+.hamburger.open .line3 { transform: translateY(-6px) rotate(-45deg); }
+
+/* ─── Mobile Nav Overlay ─── */
+.mobile-nav {
+  display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(10,10,11,0.95); z-index: 150;
+  flex-direction: column; align-items: center; justify-content: center; gap: 24px;
+  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  opacity: 0; transition: opacity 0.3s;
+}
+.mobile-nav.open { display: flex; opacity: 1; }
+.mobile-nav a {
+  font-size: 20px; font-weight: 700; color: var(--text);
+  transition: color 0.3s; padding: 8px 0;
+}
+.mobile-nav a:hover, .mobile-nav a:active { color: var(--accent); }
+.mobile-nav .btn-primary { font-size: 16px; padding: 14px 32px; margin-top: 12px; }
+
 /* ─── Buttons ─── */
 .btn {
   display: inline-flex; align-items: center; gap: 8px;
@@ -437,7 +461,8 @@ footer p { font-size: 13px; color: var(--text2); }
 @media (max-width: 640px) {
   .hero { padding: 60px 0 40px; }
   .hero-stats { gap: 24px; }
-  .nav-links a:not(.btn) { display: none; }
+  .nav-links { display: none; }
+  .hamburger { display: block; }
   .cursor-glow { display: none; }
   .cta { padding: 40px 20px; }
   .activity-ticker { left: 10px; right: 10px; bottom: 10px; max-width: none; }
@@ -468,8 +493,22 @@ footer p { font-size: 13px; color: var(--text2); }
       <a href="#referral">Refer & Earn</a>
       <a href="#contact" class="btn btn-primary">Get a Quote</a>
     </div>
+    <button class="hamburger" id="hamburger" aria-label="Menu">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="2" stroke-linecap="round">
+        <line class="line line1" x1="3" y1="6" x2="21" y2="6"/>
+        <line class="line line2" x1="3" y1="12" x2="21" y2="12"/>
+        <line class="line line3" x1="3" y1="18" x2="21" y2="18"/>
+      </svg>
+    </button>
   </div>
 </nav>
+<div class="mobile-nav" id="mobileNav">
+  <a href="#services" class="mobile-nav-link">Services</a>
+  <a href="#projects" class="mobile-nav-link">Projects</a>
+  <a href="#process" class="mobile-nav-link">Process</a>
+  <a href="#referral" class="mobile-nav-link">Refer & Earn</a>
+  <a href="#contact" class="btn btn-primary mobile-nav-link">Get a Quote</a>
+</div>
 
 <section class="hero">
   <div class="container">
@@ -913,6 +952,22 @@ document.querySelectorAll('.project-card').forEach(card => {
     const r = card.getBoundingClientRect();
     card.style.setProperty('--mx', ((e.clientX - r.left) / r.width * 100) + '%');
     card.style.setProperty('--my', ((e.clientY - r.top) / r.height * 100) + '%');
+  });
+});
+
+// ─── Mobile Hamburger Menu ───
+const hamburger = document.getElementById('hamburger');
+const mobileNav = document.getElementById('mobileNav');
+hamburger.addEventListener('click', () => {
+  hamburger.classList.toggle('open');
+  mobileNav.classList.toggle('open');
+  document.body.style.overflow = mobileNav.classList.contains('open') ? 'hidden' : '';
+});
+document.querySelectorAll('.mobile-nav-link').forEach(link => {
+  link.addEventListener('click', () => {
+    hamburger.classList.remove('open');
+    mobileNav.classList.remove('open');
+    document.body.style.overflow = '';
   });
 });
 
