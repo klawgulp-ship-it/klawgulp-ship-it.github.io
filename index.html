@@ -465,6 +465,7 @@ footer p { font-size: 13px; color: var(--text2); }
       <a href="#services">Services</a>
       <a href="#projects">Projects</a>
       <a href="#process">Process</a>
+      <a href="#referral">Refer & Earn</a>
       <a href="#contact" class="btn btn-primary">Get a Quote</a>
     </div>
   </div>
@@ -679,6 +680,32 @@ footer p { font-size: 13px; color: var(--text2); }
   </div>
 </section>
 
+<section class="section" id="referral">
+  <div class="container">
+    <div class="cta reveal-scale" style="border-color: rgba(var(--accent-r),var(--accent-g),var(--accent-b),0.2);">
+      <div class="section-label" style="text-align:center;">Referral Program</div>
+      <h2>Earn 10% on every project you refer.</h2>
+      <p>Know someone who needs a web app built? Send them your link. When they pay, you earn 10% commission. No cap. No limits.</p>
+      <form class="contact-form" id="refForm" onsubmit="return submitRef(event)" style="max-width:400px;">
+        <div class="form-group">
+          <label>Your Name</label>
+          <input type="text" id="r_name" required placeholder="Jane Doe">
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="r_email" required placeholder="jane@email.com">
+        </div>
+        <div class="form-group">
+          <label>How should we pay you? (PayPal, Venmo, USDC, etc.)</label>
+          <input type="text" id="r_payout" placeholder="PayPal: jane@email.com">
+        </div>
+        <button type="submit" id="r_btn" class="btn btn-primary" style="width:100%; justify-content: center; padding: 14px;">Get My Referral Link</button>
+        <div id="r_result" style="margin-top: 16px; display: none; padding: 16px; border-radius: 8px; font-size: 14px; line-height: 1.6;"></div>
+      </form>
+    </div>
+  </div>
+</section>
+
 <footer>
   <div class="container">
     <p>SnipeLink LLC — Senior Full-Stack Developer | <a href="mailto:Hello@snipelink.com">Hello@snipelink.com</a></p>
@@ -686,6 +713,23 @@ footer p { font-size: 13px; color: var(--text2); }
 </footer>
 
 <script>
+// ─── Capture Referral Code from URL ───
+const REF_CODE = new URLSearchParams(window.location.search).get('ref') || '';
+if (REF_CODE) {
+  // Track the click
+  fetch('https://scintillating-gratitude-production.up.railway.app/api/referrals/track', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ code: REF_CODE }),
+  }).catch(() => {});
+  // Show referral badge
+  const refBadge = document.createElement('div');
+  refBadge.style.cssText = 'position:fixed;top:60px;right:16px;z-index:99;background:var(--surface);border:1px solid var(--accent);border-radius:8px;padding:6px 12px;font-size:11px;color:var(--accent);font-weight:600;';
+  refBadge.textContent = 'Referred by: ' + REF_CODE;
+  document.body.appendChild(refBadge);
+}
+
+const API_BASE = 'https://scintillating-gratitude-production.up.railway.app';
+
 // ─── Typewriter Engine ───
 function typeText(el, text, speed, callback) {
   let i = 0;
@@ -901,16 +945,18 @@ async function submitLead(e) {
   btn.textContent = 'Sending...'; btn.disabled = true;
   btn.style.opacity = '0.7';
   try {
-    const res = await fetch('https://scintillating-gratitude-production.up.railway.app/api/inbound/lead', {
+    const payload = {
+      name: document.getElementById('f_name').value,
+      email: document.getElementById('f_email').value,
+      project_type: document.getElementById('f_type').value,
+      budget: document.getElementById('f_budget').value,
+      description: document.getElementById('f_desc').value,
+    };
+    if (REF_CODE) payload.ref = REF_CODE;
+    const res = await fetch(API_BASE + '/api/inbound/lead', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name: document.getElementById('f_name').value,
-        email: document.getElementById('f_email').value,
-        project_type: document.getElementById('f_type').value,
-        budget: document.getElementById('f_budget').value,
-        description: document.getElementById('f_desc').value,
-      }),
+      body: JSON.stringify(payload),
     });
     const data = await res.json();
     result.style.display = 'block';
@@ -932,6 +978,43 @@ async function submitLead(e) {
   }
   btn.textContent = 'Send Project Request'; btn.disabled = false;
   btn.style.opacity = '1';
+}
+
+// ─── Referral Signup ───
+async function submitRef(e) {
+  e.preventDefault();
+  const btn = document.getElementById('r_btn');
+  const result = document.getElementById('r_result');
+  btn.textContent = 'Creating...'; btn.disabled = true;
+  try {
+    const res = await fetch(API_BASE + '/api/referrals/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: document.getElementById('r_name').value,
+        email: document.getElementById('r_email').value,
+        payout_method: document.getElementById('r_payout').value,
+      }),
+    });
+    const data = await res.json();
+    result.style.display = 'block';
+    result.style.background = 'rgba(var(--accent-r),var(--accent-g),var(--accent-b),0.06)';
+    result.style.border = '1px solid rgba(var(--accent-r),var(--accent-g),var(--accent-b),0.2)';
+    result.style.color = 'var(--accent)';
+    const link = 'https://klawgulp-ship-it.github.io/?ref=' + data.code;
+    result.innerHTML = data.message + '<br><br><strong style="color:var(--text)">Your referral link:</strong><br>'
+      + '<input type="text" value="' + link + '" readonly onclick="this.select();document.execCommand(\'copy\')" '
+      + 'style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:var(--accent);font-size:13px;font-family:JetBrains Mono,monospace;margin-top:8px;cursor:pointer;" title="Click to copy">'
+      + '<br><span style="font-size:11px;color:var(--text2)">Click the link to copy. Share it everywhere.</span>';
+    document.getElementById('refForm').reset();
+  } catch (err) {
+    result.style.display = 'block';
+    result.style.background = 'rgba(239,68,68,0.06)';
+    result.style.border = '1px solid rgba(239,68,68,0.2)';
+    result.style.color = '#EF4444';
+    result.textContent = 'Something went wrong. Try again.';
+  }
+  btn.textContent = 'Get My Referral Link'; btn.disabled = false;
 }
 
 // ─── Time-Aware Greeting ───
