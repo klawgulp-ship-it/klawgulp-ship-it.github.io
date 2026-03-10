@@ -13,103 +13,332 @@
   --bg: #0A0A0B; --surface: #111113; --border: #1E1E22;
   --text: #E0E0E4; --text2: #8B8B93; --accent: #C8FF32;
   --accent2: #8BDB00; --blue: #3B82F6; --purple: #8B5CF6;
+  --glow: rgba(200,255,50,0.15); --glow-strong: rgba(200,255,50,0.3);
 }
-body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+html { scroll-behavior: smooth; }
+body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; overflow-x: hidden; }
 a { color: var(--accent); text-decoration: none; }
 .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
 
-/* Nav */
-nav { border-bottom: 1px solid var(--border); padding: 16px 0; position: sticky; top: 0; background: var(--bg); z-index: 100; backdrop-filter: blur(12px); }
+/* ─── Scroll Reveal System ─── */
+.reveal {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.reveal-left {
+  opacity: 0;
+  transform: translateX(-60px);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.reveal-left.visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+.reveal-scale {
+  opacity: 0;
+  transform: scale(0.9);
+  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.reveal-scale.visible {
+  opacity: 1;
+  transform: scale(1);
+}
+/* Stagger children */
+.stagger > * { transition-delay: calc(var(--i, 0) * 0.1s); }
+
+/* ─── Nav ─── */
+nav {
+  border-bottom: 1px solid var(--border);
+  padding: 16px 0;
+  position: sticky;
+  top: 0;
+  background: rgba(10,10,11,0.8);
+  z-index: 100;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  transition: box-shadow 0.3s;
+}
+nav.scrolled { box-shadow: 0 4px 30px rgba(0,0,0,0.5); }
 nav .container { display: flex; justify-content: space-between; align-items: center; }
-.logo { font-size: 18px; font-weight: 800; letter-spacing: -0.5px; }
+.logo { font-size: 18px; font-weight: 800; letter-spacing: -0.5px; transition: transform 0.3s; }
+.logo:hover { transform: scale(1.05); }
 .logo span { color: var(--accent); }
 .nav-links { display: flex; gap: 24px; align-items: center; }
-.nav-links a { color: var(--text2); font-size: 14px; font-weight: 500; transition: color 0.2s; }
-.nav-links a:hover { color: var(--text); }
-.btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 24px; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s; border: none; font-family: 'Inter', sans-serif; }
-.btn-primary { background: var(--accent); color: #000; }
-.btn-primary:hover { background: var(--accent2); }
-.btn-secondary { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
-.btn-secondary:hover { border-color: var(--accent); }
+.nav-links a { color: var(--text2); font-size: 14px; font-weight: 500; transition: color 0.3s, transform 0.2s; position: relative; }
+.nav-links a:not(.btn):hover { color: var(--text); transform: translateY(-1px); }
+.nav-links a:not(.btn)::after {
+  content: '';
+  position: absolute;
+  bottom: -4px; left: 0; width: 0; height: 2px;
+  background: var(--accent);
+  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.nav-links a:not(.btn):hover::after { width: 100%; }
 
-/* Hero */
-.hero { padding: 100px 0 80px; text-align: center; }
-.hero-badge { display: inline-flex; align-items: center; gap: 8px; background: var(--accent)10; border: 1px solid var(--accent)30; border-radius: 100px; padding: 6px 16px; font-size: 13px; color: var(--accent); font-weight: 600; margin-bottom: 24px; }
-.hero h1 { font-size: clamp(36px, 6vw, 64px); font-weight: 800; letter-spacing: -2px; line-height: 1.1; margin-bottom: 20px; }
-.hero h1 .accent { color: var(--accent); }
-.hero p { font-size: 18px; color: var(--text2); max-width: 600px; margin: 0 auto 32px; line-height: 1.7; }
-.hero-buttons { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
-.hero-stats { display: flex; gap: 48px; justify-content: center; margin-top: 60px; flex-wrap: wrap; }
+/* ─── Buttons ─── */
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 24px; border-radius: 8px; font-weight: 600; font-size: 14px;
+  cursor: pointer; border: none; font-family: 'Inter', sans-serif;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative; overflow: hidden;
+}
+.btn::before {
+  content: '';
+  position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+  transition: left 0.5s;
+}
+.btn:hover::before { left: 100%; }
+.btn-primary { background: var(--accent); color: #000; box-shadow: 0 0 0 0 var(--glow); }
+.btn-primary:hover { background: var(--accent2); box-shadow: 0 0 30px var(--glow-strong); transform: translateY(-2px); }
+.btn-primary:active { transform: translateY(0) scale(0.98); }
+.btn-secondary { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+.btn-secondary:hover { border-color: var(--accent); box-shadow: 0 0 20px var(--glow); transform: translateY(-2px); }
+
+/* ─── Hero ─── */
+.hero { padding: 100px 0 80px; text-align: center; position: relative; }
+.hero::before {
+  content: '';
+  position: absolute; top: -100px; left: 50%; transform: translateX(-50%);
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(200,255,50,0.06) 0%, transparent 70%);
+  pointer-events: none;
+  animation: heroPulse 4s ease-in-out infinite;
+}
+@keyframes heroPulse {
+  0%, 100% { opacity: 0.5; transform: translateX(-50%) scale(1); }
+  50% { opacity: 1; transform: translateX(-50%) scale(1.1); }
+}
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(200,255,50,0.06); border: 1px solid rgba(200,255,50,0.15);
+  border-radius: 100px; padding: 6px 16px;
+  font-size: 13px; color: var(--accent); font-weight: 600; margin-bottom: 24px;
+  animation: badgeFade 1s ease-out 0.2s both;
+  position: relative;
+}
+.hero-badge::before {
+  content: '';
+  position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--accent);
+  animation: livePulse 2s ease-in-out infinite;
+}
+@keyframes livePulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 var(--glow-strong); }
+  50% { opacity: 0.6; box-shadow: 0 0 8px 4px var(--glow); }
+}
+@keyframes badgeFade { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.hero h1 {
+  font-size: clamp(36px, 6vw, 64px); font-weight: 800;
+  letter-spacing: -2px; line-height: 1.1; margin-bottom: 20px;
+  animation: heroTitle 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both;
+}
+@keyframes heroTitle { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+.hero h1 .accent {
+  color: var(--accent);
+  background: linear-gradient(135deg, #C8FF32, #8BDB00, #C8FF32);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmer 3s linear infinite;
+}
+@keyframes shimmer { to { background-position: 200% center; } }
+.hero p {
+  font-size: 18px; color: var(--text2); max-width: 600px;
+  margin: 0 auto 32px; line-height: 1.7;
+  animation: heroTitle 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.5s both;
+}
+.hero-buttons {
+  display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
+  animation: heroTitle 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.7s both;
+}
+.hero-stats {
+  display: flex; gap: 48px; justify-content: center; margin-top: 60px; flex-wrap: wrap;
+  animation: heroTitle 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.9s both;
+}
 .hero-stats .stat { text-align: center; }
-.hero-stats .stat-value { font-size: 36px; font-weight: 800; color: var(--accent); font-family: 'JetBrains Mono', monospace; }
+.hero-stats .stat-value {
+  font-size: 36px; font-weight: 800; color: var(--accent);
+  font-family: 'JetBrains Mono', monospace;
+}
 .hero-stats .stat-label { font-size: 13px; color: var(--text2); margin-top: 4px; }
 
-/* Section */
+/* ─── Section ─── */
 .section { padding: 80px 0; }
-.section-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--accent); margin-bottom: 12px; }
+.section-label {
+  font-size: 12px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 2px; color: var(--accent); margin-bottom: 12px;
+}
 .section-title { font-size: 32px; font-weight: 800; letter-spacing: -1px; margin-bottom: 16px; }
 .section-desc { font-size: 16px; color: var(--text2); max-width: 500px; margin-bottom: 40px; }
 
-/* Services */
+/* ─── Services ─── */
 .services-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
-.service-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 28px; transition: border-color 0.2s; }
-.service-card:hover { border-color: var(--accent)60; }
-.service-icon { font-size: 28px; margin-bottom: 16px; }
+.service-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 28px;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative; overflow: hidden;
+}
+.service-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  opacity: 0; transition: opacity 0.4s;
+}
+.service-card:hover {
+  border-color: rgba(200,255,50,0.3);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 40px rgba(200,255,50,0.08);
+}
+.service-card:hover::before { opacity: 1; }
+.service-card:hover .service-icon svg { filter: drop-shadow(0 0 8px rgba(200,255,50,0.5)); }
+.service-icon { font-size: 28px; margin-bottom: 16px; transition: transform 0.3s; }
+.service-card:hover .service-icon { transform: scale(1.1); }
+.service-icon svg { transition: filter 0.4s; }
 .service-card h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
 .service-card p { font-size: 14px; color: var(--text2); line-height: 1.6; margin-bottom: 16px; }
 .service-price { font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 700; color: var(--accent); }
 .service-time { font-size: 13px; color: var(--text2); margin-left: 8px; }
 
-/* Projects */
+/* ─── Projects ─── */
 .projects-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
-.project-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 28px; }
-.project-card h3 { font-size: 17px; font-weight: 700; margin-bottom: 6px; }
-.project-card .project-desc { font-size: 14px; color: var(--text2); margin-bottom: 16px; line-height: 1.6; }
-.tech-tags { display: flex; gap: 6px; flex-wrap: wrap; }
-.tech-tag { background: var(--blue)15; color: var(--blue); border: 1px solid var(--blue)30; border-radius: 4px; padding: 2px 10px; font-size: 12px; font-weight: 600; }
+.project-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 28px;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+.project-card::after {
+  content: '';
+  position: absolute; inset: 0; border-radius: 12px;
+  background: radial-gradient(400px circle at var(--mx, 50%) var(--my, 50%), var(--glow), transparent 60%);
+  opacity: 0; transition: opacity 0.4s; pointer-events: none;
+}
+.project-card:hover { border-color: rgba(200,255,50,0.2); transform: translateY(-3px); }
+.project-card:hover::after { opacity: 1; }
+.project-card h3 { font-size: 17px; font-weight: 700; margin-bottom: 6px; position: relative; z-index: 1; }
+.project-card .project-desc { font-size: 14px; color: var(--text2); margin-bottom: 16px; line-height: 1.6; position: relative; z-index: 1; }
+.tech-tags { display: flex; gap: 6px; flex-wrap: wrap; position: relative; z-index: 1; }
+.tech-tag {
+  background: rgba(59,130,246,0.08); color: var(--blue);
+  border: 1px solid rgba(59,130,246,0.15); border-radius: 4px;
+  padding: 2px 10px; font-size: 12px; font-weight: 600;
+  transition: all 0.3s;
+}
+.project-card:hover .tech-tag {
+  background: rgba(59,130,246,0.12);
+  border-color: rgba(59,130,246,0.3);
+}
 
-/* Stack */
+/* ─── Stack ─── */
 .stack-grid { display: flex; gap: 10px; flex-wrap: wrap; }
-.stack-item { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 20px; font-size: 14px; font-weight: 600; }
+.stack-item {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; padding: 10px 20px; font-size: 14px; font-weight: 600;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: default;
+}
+.stack-item:hover {
+  border-color: var(--accent);
+  background: rgba(200,255,50,0.05);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(200,255,50,0.1);
+  color: var(--accent);
+}
 
-/* How it works */
+/* ─── Process ─── */
 .process-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
-.process-step { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; text-align: center; }
-.step-num { width: 36px; height: 36px; border-radius: 50%; background: var(--accent)15; color: var(--accent); display: inline-flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px; margin-bottom: 12px; }
+.process-step {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 24px; text-align: center;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.process-step:hover { border-color: rgba(200,255,50,0.2); transform: translateY(-3px); }
+.step-num {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: rgba(200,255,50,0.08); color: var(--accent);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 16px; margin-bottom: 12px;
+  transition: all 0.3s;
+  border: 1px solid rgba(200,255,50,0.15);
+}
+.process-step:hover .step-num {
+  background: var(--accent); color: #000;
+  box-shadow: 0 0 20px var(--glow-strong);
+}
 .process-step h3 { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
 .process-step p { font-size: 13px; color: var(--text2); }
 
-/* CTA / Contact */
-.cta { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 60px 40px; text-align: center; margin: 40px 0; }
-.cta h2 { font-size: 32px; font-weight: 800; letter-spacing: -1px; margin-bottom: 12px; }
-.cta p { color: var(--text2); font-size: 16px; margin-bottom: 28px; }
+/* ─── CTA / Contact ─── */
+.cta {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 16px; padding: 60px 40px; text-align: center; margin: 40px 0;
+  position: relative; overflow: hidden;
+}
+.cta::before {
+  content: '';
+  position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+  background: conic-gradient(from 0deg, transparent 0%, rgba(200,255,50,0.03) 25%, transparent 50%);
+  animation: ctaSpin 8s linear infinite;
+  pointer-events: none;
+}
+@keyframes ctaSpin { to { transform: rotate(360deg); } }
+.cta h2 { font-size: 32px; font-weight: 800; letter-spacing: -1px; margin-bottom: 12px; position: relative; }
+.cta p { color: var(--text2); font-size: 16px; margin-bottom: 28px; position: relative; }
 
-/* Contact Form */
-.contact-form { max-width: 500px; margin: 0 auto; text-align: left; }
+/* ─── Contact Form ─── */
+.contact-form { max-width: 500px; margin: 0 auto; text-align: left; position: relative; }
 .form-group { margin-bottom: 16px; }
-.form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--text2); margin-bottom: 6px; }
+.form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--text2); margin-bottom: 6px; transition: color 0.3s; }
 .form-group input, .form-group textarea, .form-group select {
   width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
   padding: 10px 14px; color: var(--text); font-size: 14px; font-family: 'Inter', sans-serif; outline: none;
+  transition: border-color 0.3s, box-shadow 0.3s;
 }
-.form-group input:focus, .form-group textarea:focus { border-color: var(--accent); }
+.form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(200,255,50,0.1);
+}
+.form-group:focus-within label { color: var(--accent); }
 .form-group textarea { resize: vertical; min-height: 100px; }
 
-/* Footer */
+/* ─── Footer ─── */
 footer { border-top: 1px solid var(--border); padding: 24px 0; text-align: center; }
 footer p { font-size: 13px; color: var(--text2); }
 
-/* Mobile */
+/* ─── Cursor Glow (desktop only) ─── */
+.cursor-glow {
+  position: fixed; width: 300px; height: 300px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(200,255,50,0.04) 0%, transparent 70%);
+  pointer-events: none; z-index: 0;
+  transform: translate(-50%, -50%);
+  transition: opacity 0.3s;
+}
+
+/* ─── Mobile ─── */
 @media (max-width: 640px) {
   .hero { padding: 60px 0 40px; }
   .hero-stats { gap: 24px; }
   .nav-links a:not(.btn) { display: none; }
+  .cursor-glow { display: none; }
+  .cta { padding: 40px 20px; }
 }
 </style>
 </head>
 <body>
 
-<nav>
+<div class="cursor-glow" id="cursorGlow"></div>
+
+<nav id="mainNav">
   <div class="container">
     <div class="logo">Snipe<span>Link</span> LLC</div>
     <div class="nav-links">
@@ -123,7 +352,7 @@ footer p { font-size: 13px; color: var(--text2); }
 
 <section class="hero">
   <div class="container">
-    <div class="hero-badge">Available for projects — Starting immediately</div>
+    <div class="hero-badge">&nbsp;&nbsp;&nbsp;Available for projects — Starting immediately</div>
     <h1>I build web apps<br><span class="accent">stupidly fast.</span></h1>
     <p>Senior full-stack developer with an AI-assisted workflow. I ship production React + Node.js apps in days that would take others months. Your idea, deployed and collecting payments.</p>
     <div class="hero-buttons">
@@ -131,50 +360,50 @@ footer p { font-size: 13px; color: var(--text2); }
       <a href="#projects" class="btn btn-secondary">See My Work</a>
     </div>
     <div class="hero-stats">
-      <div class="stat"><div class="stat-value">6+</div><div class="stat-label">Shipped Products</div></div>
-      <div class="stat"><div class="stat-value">5-10x</div><div class="stat-label">Faster Delivery</div></div>
-      <div class="stat"><div class="stat-value">24h</div><div class="stat-label">Response Time</div></div>
+      <div class="stat"><div class="stat-value" data-count="6">0</div><div class="stat-label">Shipped Products</div></div>
+      <div class="stat"><div class="stat-value" data-text="5-10x">0x</div><div class="stat-label">Faster Delivery</div></div>
+      <div class="stat"><div class="stat-value" data-text="24h">0h</div><div class="stat-label">Response Time</div></div>
     </div>
   </div>
 </section>
 
 <section class="section" id="services">
   <div class="container">
-    <div class="section-label">Services</div>
-    <div class="section-title">What I Build</div>
-    <div class="section-desc">End-to-end development from idea to production. You tell me what you need, I make it real.</div>
-    <div class="services-grid">
-      <div class="service-card">
+    <div class="section-label reveal-left">Services</div>
+    <div class="section-title reveal-left">What I Build</div>
+    <div class="section-desc reveal-left">End-to-end development from idea to production. You tell me what you need, I make it real.</div>
+    <div class="services-grid stagger">
+      <div class="service-card reveal" style="--i:0">
         <div class="service-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#C8FF32" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/><polyline points="7 8 10 11 7 14"/><line x1="13" y1="14" x2="17" y2="14"/></svg></div>
         <h3>Full-Stack Web Apps</h3>
         <p>Complete web applications with auth, database, API, admin panel, and deployment. React + TypeScript frontend, Node.js backend, PostgreSQL database.</p>
         <span class="service-price">$3,000 - $8,000</span><span class="service-time">5-14 days</span>
       </div>
-      <div class="service-card">
+      <div class="service-card reveal" style="--i:1">
         <div class="service-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#C8FF32" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/><line x1="6" y1="15" x2="10" y2="15"/><line x1="14" y1="15" x2="16" y2="15"/></svg></div>
         <h3>Payment Integration</h3>
         <p>Stripe, crypto, or custom payment flows. Subscriptions, one-time payments, invoicing, split payments, webhooks. Production-ready and tested.</p>
         <span class="service-price">$1,500 - $3,000</span><span class="service-time">3-5 days</span>
       </div>
-      <div class="service-card">
+      <div class="service-card reveal" style="--i:2">
         <div class="service-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#C8FF32" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg></div>
         <h3>Dashboards & Analytics</h3>
         <p>Real-time data visualization, admin dashboards, reporting tools. Charts, tables, filters, exports. Beautiful dark-mode UI included.</p>
         <span class="service-price">$2,000 - $5,000</span><span class="service-time">4-7 days</span>
       </div>
-      <div class="service-card">
+      <div class="service-card reveal" style="--i:3">
         <div class="service-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#C8FF32" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
         <h3>Landing Pages</h3>
         <p>High-converting product and SaaS landing pages. Mobile-optimized, fast-loading, with analytics and A/B testing built in.</p>
         <span class="service-price">$600 - $1,500</span><span class="service-time">1-3 days</span>
       </div>
-      <div class="service-card">
+      <div class="service-card reveal" style="--i:4">
         <div class="service-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#C8FF32" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a4 4 0 014 4v2a4 4 0 01-8 0V6a4 4 0 014-4z"/><path d="M16 14H8a4 4 0 00-4 4v2h16v-2a4 4 0 00-4-4z"/><circle cx="9" cy="7" r="0.5" fill="#C8FF32"/><circle cx="15" cy="7" r="0.5" fill="#C8FF32"/></svg></div>
         <h3>AI Integration</h3>
         <p>Add AI features to your product. Chatbots, content generation, smart search, automated workflows using Claude, GPT, or custom models.</p>
         <span class="service-price">$2,000 - $5,000</span><span class="service-time">3-7 days</span>
       </div>
-      <div class="service-card">
+      <div class="service-card reveal" style="--i:5">
         <div class="service-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#C8FF32" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
         <h3>Blockchain / Web3</h3>
         <p>Solana and Ethereum frontends. Wallet connection, token dashboards, NFT marketplaces, on-chain analytics. Full Web3 stack.</p>
@@ -186,36 +415,36 @@ footer p { font-size: 13px; color: var(--text2); }
 
 <section class="section" id="projects" style="background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
   <div class="container">
-    <div class="section-label">Portfolio</div>
-    <div class="section-title">Shipped & Running</div>
-    <div class="section-desc">Real products in production. Not mockups. Not tutorials. Shipped code making money.</div>
-    <div class="projects-grid">
-      <div class="project-card">
+    <div class="section-label reveal-left">Portfolio</div>
+    <div class="section-title reveal-left">Shipped & Running</div>
+    <div class="section-desc reveal-left">Real products in production. Not mockups. Not tutorials. Shipped code making money.</div>
+    <div class="projects-grid stagger">
+      <div class="project-card reveal" style="--i:0">
         <h3>SnipeLink</h3>
         <div class="project-desc">Full-stack payment platform for freelancers. Invoicing, payment links, transaction management, client portal.</div>
         <div class="tech-tags"><span class="tech-tag">React</span><span class="tech-tag">TypeScript</span><span class="tech-tag">Node.js</span><span class="tech-tag">PostgreSQL</span><span class="tech-tag">Railway</span></div>
       </div>
-      <div class="project-card">
+      <div class="project-card reveal" style="--i:1">
         <h3>SolAudit</h3>
         <div class="project-desc">Solana blockchain analytics tool. Real-time transaction monitoring, wallet analysis, smart contract auditing dashboard.</div>
         <div class="tech-tags"><span class="tech-tag">React</span><span class="tech-tag">Solana/Web3</span><span class="tech-tag">TypeScript</span><span class="tech-tag">Node.js</span></div>
       </div>
-      <div class="project-card">
+      <div class="project-card reveal" style="--i:2">
         <h3>SkyEar</h3>
         <div class="project-desc">Real-time signal monitoring platform. Live audio processing, visualization dashboards, alert systems, WebSocket streaming.</div>
         <div class="tech-tags"><span class="tech-tag">React</span><span class="tech-tag">WebSockets</span><span class="tech-tag">Node.js</span><span class="tech-tag">Real-Time</span></div>
       </div>
-      <div class="project-card">
+      <div class="project-card reveal" style="--i:3">
         <h3>First Responder Analytics</h3>
         <div class="project-desc">Emergency services dashboard. Incident tracking, response time metrics, geographic heatmaps, automated reporting.</div>
         <div class="tech-tags"><span class="tech-tag">React</span><span class="tech-tag">Express</span><span class="tech-tag">PostgreSQL</span><span class="tech-tag">Data Viz</span></div>
       </div>
-      <div class="project-card">
+      <div class="project-card reveal" style="--i:4">
         <h3>MixMaster Pro</h3>
         <div class="project-desc">Audio production platform. Real-time mixing, session management, collaboration features. Deployed on Railway.</div>
         <div class="tech-tags"><span class="tech-tag">React</span><span class="tech-tag">TypeScript</span><span class="tech-tag">Web Audio</span><span class="tech-tag">Railway</span></div>
       </div>
-      <div class="project-card">
+      <div class="project-card reveal" style="--i:5">
         <h3>Agency Command</h3>
         <div class="project-desc">AI-powered freelance management. Autonomous job scraping, Claude-generated proposals, client pipeline, auto-invoicing.</div>
         <div class="tech-tags"><span class="tech-tag">React</span><span class="tech-tag">Express</span><span class="tech-tag">Claude API</span><span class="tech-tag">SQLite</span></div>
@@ -226,51 +455,50 @@ footer p { font-size: 13px; color: var(--text2); }
 
 <section class="section">
   <div class="container">
-    <div class="section-label">Tech Stack</div>
-    <div class="section-title">Tools I Ship With</div>
-    <div class="section-desc" style="margin-bottom: 24px;">Battle-tested stack. Every tool chosen for speed and reliability.</div>
-    <div class="stack-grid">
-      <div class="stack-item">TypeScript</div>
-      <div class="stack-item">React</div>
-      <div class="stack-item">Next.js</div>
-      <div class="stack-item">Node.js</div>
-      <div class="stack-item">Express</div>
-      <div class="stack-item">PostgreSQL</div>
-      <div class="stack-item">MongoDB</div>
-      <div class="stack-item">Stripe</div>
-      <div class="stack-item">Solana / Web3</div>
-      <div class="stack-item">Claude AI</div>
-      <div class="stack-item">Tailwind CSS</div>
-      <div class="stack-item">Railway</div>
-      <div class="stack-item">Vercel</div>
-      <div class="stack-item">Docker</div>
-      <div class="stack-item">Git / CI/CD</div>
+    <div class="section-label reveal-left">Tech Stack</div>
+    <div class="section-title reveal-left">Tools I Ship With</div>
+    <div class="section-desc reveal-left" style="margin-bottom: 24px;">Battle-tested stack. Every tool chosen for speed and reliability.</div>
+    <div class="stack-grid stagger">
+      <div class="stack-item reveal-scale" style="--i:0">TypeScript</div>
+      <div class="stack-item reveal-scale" style="--i:1">React</div>
+      <div class="stack-item reveal-scale" style="--i:2">Next.js</div>
+      <div class="stack-item reveal-scale" style="--i:3">Node.js</div>
+      <div class="stack-item reveal-scale" style="--i:4">Express</div>
+      <div class="stack-item reveal-scale" style="--i:5">PostgreSQL</div>
+      <div class="stack-item reveal-scale" style="--i:6">MongoDB</div>
+      <div class="stack-item reveal-scale" style="--i:7">Solana / Web3</div>
+      <div class="stack-item reveal-scale" style="--i:8">Claude AI</div>
+      <div class="stack-item reveal-scale" style="--i:9">Tailwind CSS</div>
+      <div class="stack-item reveal-scale" style="--i:10">Railway</div>
+      <div class="stack-item reveal-scale" style="--i:11">Vercel</div>
+      <div class="stack-item reveal-scale" style="--i:12">Docker</div>
+      <div class="stack-item reveal-scale" style="--i:13">Git / CI/CD</div>
     </div>
   </div>
 </section>
 
 <section class="section" id="process">
   <div class="container">
-    <div class="section-label">Process</div>
-    <div class="section-title">How We Work Together</div>
-    <div class="section-desc">Simple. Fast. No BS.</div>
-    <div class="process-grid">
-      <div class="process-step">
+    <div class="section-label reveal-left">Process</div>
+    <div class="section-title reveal-left">How We Work Together</div>
+    <div class="section-desc reveal-left">Simple. Fast. No BS.</div>
+    <div class="process-grid stagger">
+      <div class="process-step reveal" style="--i:0">
         <div class="step-num">1</div>
         <h3>Tell Me What You Need</h3>
         <p>Fill out the form below or email me. Describe your project — I'll respond within 24 hours with a quote.</p>
       </div>
-      <div class="process-step">
+      <div class="process-step reveal" style="--i:1">
         <div class="step-num">2</div>
         <h3>50% Deposit</h3>
         <p>Agree on scope and timeline. Pay 50% upfront via secure payment link. I start building immediately.</p>
       </div>
-      <div class="process-step">
+      <div class="process-step reveal" style="--i:2">
         <div class="step-num">3</div>
         <h3>I Build It</h3>
         <p>AI-assisted development = 5-10x faster. Daily updates. You see progress in real-time via staging link.</p>
       </div>
-      <div class="process-step">
+      <div class="process-step reveal" style="--i:3">
         <div class="step-num">4</div>
         <h3>Ship & Collect</h3>
         <p>Deployed to production. Fully tested. Final 50% payment. You own everything. I'm available for support.</p>
@@ -281,7 +509,7 @@ footer p { font-size: 13px; color: var(--text2); }
 
 <section class="section" id="contact">
   <div class="container">
-    <div class="cta">
+    <div class="cta reveal-scale">
       <h2>Let's build something.</h2>
       <p>Describe your project and I'll get back to you within 24 hours with a quote and timeline.</p>
       <form class="contact-form" id="leadForm" onsubmit="return submitLead(event)">
@@ -322,44 +550,6 @@ footer p { font-size: 13px; color: var(--text2); }
         <button type="submit" id="f_btn" class="btn btn-primary" style="width:100%; justify-content: center; padding: 14px;">Send Project Request</button>
         <div id="f_result" style="margin-top: 16px; display: none; padding: 16px; border-radius: 8px; font-size: 14px; line-height: 1.6;"></div>
       </form>
-      <script>
-      async function submitLead(e) {
-        e.preventDefault();
-        const btn = document.getElementById('f_btn');
-        const result = document.getElementById('f_result');
-        btn.textContent = 'Sending...'; btn.disabled = true;
-        try {
-          const res = await fetch('https://scintillating-gratitude-production.up.railway.app/api/inbound/lead', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              name: document.getElementById('f_name').value,
-              email: document.getElementById('f_email').value,
-              project_type: document.getElementById('f_type').value,
-              budget: document.getElementById('f_budget').value,
-              description: document.getElementById('f_desc').value,
-            }),
-          });
-          const data = await res.json();
-          result.style.display = 'block';
-          result.style.background = 'rgba(200,255,50,0.1)';
-          result.style.border = '1px solid rgba(200,255,50,0.3)';
-          result.style.color = '#C8FF32';
-          result.innerHTML = data.message || 'Thanks! I\'ll get back to you within 24 hours.';
-          if (data.quote) {
-            result.innerHTML += '<br><br><strong style="color:#E0E0E4">Quick Quote:</strong><br><span style="color:#A0A0A8">' + data.quote.replace(/\n/g, '<br>') + '</span>';
-          }
-          document.getElementById('leadForm').reset();
-        } catch (err) {
-          result.style.display = 'block';
-          result.style.background = 'rgba(239,68,68,0.1)';
-          result.style.border = '1px solid rgba(239,68,68,0.3)';
-          result.style.color = '#EF4444';
-          result.textContent = 'Something went wrong. Email me directly at Hello@snipelink.com';
-        }
-        btn.textContent = 'Send Project Request'; btn.disabled = false;
-      }
-      </script>
     </div>
   </div>
 </section>
@@ -370,5 +560,122 @@ footer p { font-size: 13px; color: var(--text2); }
   </div>
 </footer>
 
+<script>
+// ─── Cursor Glow ───
+const glow = document.getElementById('cursorGlow');
+let mx = 0, my = 0, gx = 0, gy = 0;
+document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+function animateGlow() {
+  gx += (mx - gx) * 0.1;
+  gy += (my - gy) * 0.1;
+  glow.style.left = gx + 'px';
+  glow.style.top = gy + 'px';
+  requestAnimationFrame(animateGlow);
+}
+animateGlow();
+
+// ─── Project Card Mouse Tracking ───
+document.querySelectorAll('.project-card').forEach(card => {
+  card.addEventListener('mousemove', e => {
+    const r = card.getBoundingClientRect();
+    card.style.setProperty('--mx', ((e.clientX - r.left) / r.width * 100) + '%');
+    card.style.setProperty('--my', ((e.clientY - r.top) / r.height * 100) + '%');
+  });
+});
+
+// ─── Nav Shadow on Scroll ───
+const nav = document.getElementById('mainNav');
+window.addEventListener('scroll', () => {
+  nav.classList.toggle('scrolled', window.scrollY > 20);
+}, { passive: true });
+
+// ─── Scroll Reveal (Intersection Observer) ───
+const revealEls = document.querySelectorAll('.reveal, .reveal-left, .reveal-scale');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+      observer.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+revealEls.forEach(el => observer.observe(el));
+
+// ─── Number Counter Animation ───
+let counted = false;
+const statsObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting && !counted) {
+      counted = true;
+      document.querySelectorAll('.stat-value').forEach(el => {
+        const count = el.dataset.count;
+        const text = el.dataset.text;
+        if (count) {
+          let n = 0;
+          const target = parseInt(count);
+          const step = () => {
+            n += 1;
+            el.textContent = n + '+';
+            if (n < target) requestAnimationFrame(step);
+          };
+          step();
+        } else if (text) {
+          const chars = text.split('');
+          let i = 0;
+          el.textContent = '';
+          const type = () => {
+            el.textContent = chars.slice(0, i + 1).join('');
+            i++;
+            if (i < chars.length) setTimeout(type, 80);
+          };
+          type();
+        }
+      });
+    }
+  });
+}, { threshold: 0.5 });
+document.querySelectorAll('.hero-stats').forEach(el => statsObserver.observe(el));
+
+// ─── Form Submission ───
+async function submitLead(e) {
+  e.preventDefault();
+  const btn = document.getElementById('f_btn');
+  const result = document.getElementById('f_result');
+  btn.textContent = 'Sending...'; btn.disabled = true;
+  btn.style.opacity = '0.7';
+  try {
+    const res = await fetch('https://scintillating-gratitude-production.up.railway.app/api/inbound/lead', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: document.getElementById('f_name').value,
+        email: document.getElementById('f_email').value,
+        project_type: document.getElementById('f_type').value,
+        budget: document.getElementById('f_budget').value,
+        description: document.getElementById('f_desc').value,
+      }),
+    });
+    const data = await res.json();
+    result.style.display = 'block';
+    result.style.background = 'rgba(200,255,50,0.06)';
+    result.style.border = '1px solid rgba(200,255,50,0.2)';
+    result.style.color = '#C8FF32';
+    result.style.animation = 'badgeFade 0.5s ease-out';
+    result.innerHTML = data.message || 'Thanks! I\'ll get back to you within 24 hours.';
+    if (data.quote) {
+      result.innerHTML += '<br><br><strong style="color:#E0E0E4">Quick Quote:</strong><br><span style="color:#A0A0A8">' + data.quote.replace(/\n/g, '<br>') + '</span>';
+    }
+    document.getElementById('leadForm').reset();
+  } catch (err) {
+    result.style.display = 'block';
+    result.style.background = 'rgba(239,68,68,0.06)';
+    result.style.border = '1px solid rgba(239,68,68,0.2)';
+    result.style.color = '#EF4444';
+    result.textContent = 'Something went wrong. Email me directly at Hello@snipelink.com';
+  }
+  btn.textContent = 'Send Project Request'; btn.disabled = false;
+  btn.style.opacity = '1';
+}
+</script>
 </body>
 </html>
