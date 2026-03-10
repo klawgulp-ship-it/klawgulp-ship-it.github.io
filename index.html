@@ -327,6 +327,34 @@ nav .container { display: flex; justify-content: space-between; align-items: cen
 .form-group:focus-within label { color: var(--accent); }
 .form-group textarea { resize: vertical; min-height: 100px; }
 
+/* ─── Stat flash on re-count ─── */
+.stat-value {
+  transition: text-shadow 0.3s;
+}
+.stat-value.flash {
+  text-shadow: 0 0 20px rgba(200,255,50,0.6);
+}
+
+/* ─── Particles ─── */
+.particles {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  pointer-events: none; z-index: 0; overflow: hidden;
+}
+.particle {
+  position: absolute;
+  width: 2px; height: 2px;
+  background: var(--accent);
+  border-radius: 50%;
+  opacity: 0;
+  animation: float linear infinite;
+}
+@keyframes float {
+  0% { opacity: 0; transform: translateY(100vh) scale(0); }
+  10% { opacity: 0.4; }
+  90% { opacity: 0.1; }
+  100% { opacity: 0; transform: translateY(-20px) scale(1); }
+}
+
 /* ─── Footer ─── */
 footer { border-top: 1px solid var(--border); padding: 24px 0; text-align: center; }
 footer p { font-size: 13px; color: var(--text2); }
@@ -353,6 +381,7 @@ footer p { font-size: 13px; color: var(--text2); }
 <body>
 
 <div class="cursor-glow" id="cursorGlow"></div>
+<div class="particles" id="particles"></div>
 
 <nav id="mainNav">
   <div class="container">
@@ -594,6 +623,35 @@ function typeText(el, text, speed, callback) {
   tick();
 }
 
+function eraseText(el, speed, callback) {
+  let text = el.textContent;
+  function tick() {
+    text = text.slice(0, -1);
+    el.textContent = text;
+    if (text.length > 0) {
+      setTimeout(tick, speed);
+    } else if (callback) callback();
+  }
+  el.classList.add('type-cursor');
+  tick();
+}
+
+// ─── Rotating Headline Phrases ───
+const phrases = ['stupidly fast.', 'that scale.', 'you\'ll love.', 'that make money.', 'with AI power.'];
+let phraseIndex = 0;
+let accentEl = null;
+
+function rotatePhrase() {
+  if (!accentEl) return;
+  eraseText(accentEl, 35, () => {
+    phraseIndex = (phraseIndex + 1) % phrases.length;
+    accentEl.classList.add('type-cursor');
+    typeText(accentEl, phrases[phraseIndex], 55, () => {
+      setTimeout(rotatePhrase, 4000);
+    });
+  });
+}
+
 // ─── Hero Typing Sequence ───
 (function heroSequence() {
   const badge = document.getElementById('heroBadge');
@@ -603,33 +661,30 @@ function typeText(el, text, speed, callback) {
   const buttons = document.querySelector('.hero-buttons');
   const stats = document.querySelector('.hero-stats');
 
-  // Step 1: Badge types in
   setTimeout(() => {
     badge.classList.add('typed');
     typeText(badgeText, 'Available for projects — Starting immediately', 30, () => {
-      // Step 2: Headline types
       h1.innerHTML = '<span class="type-cursor" id="h1Line1"></span>';
       const line1 = document.getElementById('h1Line1');
       typeText(line1, 'I build web apps', 45, () => {
-        // Step 3: Accent line types
         h1.innerHTML = 'I build web apps<br><span class="accent type-cursor" id="h1Line2"></span>';
-        const line2 = document.getElementById('h1Line2');
-        typeText(line2, 'stupidly fast.', 55, () => {
-          // Step 4: Fade in the rest
+        accentEl = document.getElementById('h1Line2');
+        typeText(accentEl, phrases[0], 55, () => {
           heroP.classList.add('show');
           buttons.classList.add('show');
           setTimeout(() => {
             stats.classList.add('show');
-            // Step 5: Animate stat numbers
             setTimeout(animateStats, 300);
           }, 200);
+          // Start rotating after 4s
+          setTimeout(rotatePhrase, 4000);
         });
       });
     });
   }, 300);
 })();
 
-// ─── Stat Counter/Typewriter ───
+// ─── Stat Counter/Typewriter (Looping) ───
 function animateStats() {
   document.querySelectorAll('.stat-value').forEach(el => {
     const count = el.dataset.count;
@@ -641,6 +696,7 @@ function animateStats() {
         n += 1;
         el.textContent = n + '+';
         if (n < target) setTimeout(step, 120);
+        else { el.classList.add('flash'); setTimeout(() => el.classList.remove('flash'), 500); }
       };
       step();
     } else if (text) {
@@ -651,11 +707,43 @@ function animateStats() {
         el.textContent = chars.slice(0, i + 1).join('');
         i++;
         if (i < chars.length) setTimeout(type, 80);
+        else { el.classList.add('flash'); setTimeout(() => el.classList.remove('flash'), 500); }
       };
       type();
     }
   });
 }
+
+// Re-animate stats every 8 seconds
+setInterval(() => {
+  document.querySelectorAll('.stat-value').forEach(el => {
+    el.style.transition = 'opacity 0.3s';
+    el.style.opacity = '0.3';
+    setTimeout(() => {
+      el.style.opacity = '1';
+      animateStats();
+    }, 400);
+  });
+}, 8000);
+
+// ─── Ambient Particles ───
+(function spawnParticles() {
+  const container = document.getElementById('particles');
+  function createParticle() {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.left = Math.random() * 100 + '%';
+    p.style.animationDuration = (8 + Math.random() * 12) + 's';
+    p.style.animationDelay = Math.random() * 2 + 's';
+    p.style.width = p.style.height = (1 + Math.random() * 2) + 'px';
+    container.appendChild(p);
+    setTimeout(() => p.remove(), 20000);
+  }
+  // Initial batch
+  for (let i = 0; i < 15; i++) setTimeout(() => createParticle(), i * 200);
+  // Keep spawning
+  setInterval(createParticle, 1500);
+})()
 
 // ─── Cursor Glow ───
 const glow = document.getElementById('cursorGlow');
