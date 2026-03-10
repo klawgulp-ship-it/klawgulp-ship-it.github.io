@@ -715,6 +715,14 @@ footer p { font-size: 13px; color: var(--text2); }
         <button type="submit" id="f_btn" class="btn btn-primary" style="width:100%; justify-content: center; padding: 14px;">Send Project Request</button>
         <div id="f_result" style="margin-top: 16px; display: none; padding: 16px; border-radius: 8px; font-size: 14px; line-height: 1.6;"></div>
       </form>
+      <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border); text-align: center;">
+        <p style="font-size: 14px; color: var(--text2); margin-bottom: 12px;">Already submitted a project?</p>
+        <form onsubmit="return lookupPortal(event)" style="display: flex; gap: 8px; max-width: 400px; margin: 0 auto;">
+          <input type="email" id="lookup_email" required placeholder="Enter your email" style="flex:1; background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:10px 14px; color:var(--text); font-size:14px; outline:none; transition:border-color 0.3s;">
+          <button type="submit" class="btn btn-primary" style="padding:10px 20px; font-size:13px; white-space:nowrap;">Check Status</button>
+        </form>
+        <div id="lookup_result" style="margin-top: 12px; display: none; font-size: 14px;"></div>
+      </div>
     </div>
   </div>
 </section>
@@ -1020,6 +1028,9 @@ async function submitLead(e) {
     result.style.color = 'var(--accent)';
     result.style.animation = 'badgeFade 0.5s ease-out';
     result.innerHTML = data.message || 'Thanks! I\'ll get back to you within 24 hours.';
+    if (data.portal_url) {
+      result.innerHTML += '<br><br><a href="' + data.portal_url + '" target="_blank" style="display:inline-block;margin-top:8px;padding:10px 20px;background:var(--accent);color:#000;font-weight:700;font-size:13px;border-radius:6px;text-decoration:none;">View Your Project Portal</a>';
+    }
     if (data.quote) {
       result.innerHTML += '<br><br><strong style="color:#E0E0E4">Quick Quote:</strong><br><span style="color:#A0A0A8">' + data.quote.replace(/\n/g, '<br>') + '</span>';
     }
@@ -1033,6 +1044,37 @@ async function submitLead(e) {
   }
   btn.textContent = 'Send Project Request'; btn.disabled = false;
   btn.style.opacity = '1';
+}
+
+// ─── Portal Lookup ───
+async function lookupPortal(e) {
+  e.preventDefault();
+  const result = document.getElementById('lookup_result');
+  const email = document.getElementById('lookup_email').value;
+  result.style.display = 'block';
+  result.style.color = 'var(--text2)';
+  result.textContent = 'Looking up...';
+  try {
+    const res = await fetch(API_BASE + '/api/portal/lookup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      result.style.color = '#F59E0B';
+      result.textContent = data.error || 'No projects found.';
+      return false;
+    }
+    result.style.color = 'var(--accent)';
+    result.innerHTML = data.projects.map(p =>
+      '<div style="margin-bottom:8px;"><a href="' + p.portal_url + '" target="_blank" style="color:var(--accent);font-weight:600;text-decoration:underline;">' + p.project + '</a> <span style="color:var(--text2);font-size:12px;text-transform:capitalize;">— ' + p.stage.replace(/_/g, ' ') + '</span></div>'
+    ).join('');
+  } catch (err) {
+    result.style.color = '#EF4444';
+    result.textContent = 'Something went wrong. Try again.';
+  }
+  return false;
 }
 
 // ─── Referral Signup ───
