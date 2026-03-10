@@ -359,6 +359,65 @@ nav .container { display: flex; justify-content: space-between; align-items: cen
   100% { opacity: 0; transform: translateY(-20px) scale(1); }
 }
 
+/* ─── Scroll Progress Bar ─── */
+.scroll-progress {
+  position: fixed; top: 0; left: 0; height: 3px; z-index: 200;
+  background: var(--accent);
+  width: 0%;
+  transition: background 1.5s ease;
+  box-shadow: 0 0 10px var(--accent);
+}
+
+/* ─── Activity Ticker ─── */
+.activity-ticker {
+  position: fixed; bottom: 20px; left: 20px; z-index: 90;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 10px 16px;
+  font-size: 12px; color: var(--text2);
+  display: flex; align-items: center; gap: 8px;
+  opacity: 0; transform: translateY(20px);
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  max-width: 320px; backdrop-filter: blur(12px);
+}
+.activity-ticker.show { opacity: 1; transform: translateY(0); }
+.activity-ticker .dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--accent); flex-shrink: 0;
+  animation: livePulse 2s ease-in-out infinite;
+}
+.activity-ticker strong { color: var(--text); }
+
+/* ─── Terminal Block ─── */
+.terminal {
+  background: #0D0D0F; border: 1px solid var(--border);
+  border-radius: 12px; overflow: hidden; max-width: 600px;
+  margin: 40px auto 0; font-family: 'JetBrains Mono', monospace;
+}
+.terminal-bar {
+  background: #1A1A1E; padding: 8px 12px; display: flex; gap: 6px;
+  border-bottom: 1px solid var(--border);
+}
+.terminal-dot { width: 10px; height: 10px; border-radius: 50%; }
+.terminal-dot.r { background: #FF5F57; }
+.terminal-dot.y { background: #FEBC2E; }
+.terminal-dot.g { background: #28C840; }
+.terminal-body {
+  padding: 16px; font-size: 13px; line-height: 1.8;
+  color: var(--text2); min-height: 120px;
+}
+.terminal-body .prompt { color: var(--accent); }
+.terminal-body .cmd { color: var(--text); }
+.terminal-body .output { color: var(--text2); }
+.terminal-body .success { color: #28C840; }
+.terminal-cursor {
+  display: inline-block; width: 8px; height: 15px;
+  background: var(--accent); vertical-align: text-bottom;
+  animation: blink 0.6s step-end infinite;
+}
+
+/* ─── 3D Tilt Cards ─── */
+.tilt-card { transform-style: preserve-3d; transition: transform 0.1s ease; }
+
 /* ─── Footer ─── */
 footer { border-top: 1px solid var(--border); padding: 24px 0; text-align: center; }
 footer p { font-size: 13px; color: var(--text2); }
@@ -379,13 +438,17 @@ footer p { font-size: 13px; color: var(--text2); }
   .nav-links a:not(.btn) { display: none; }
   .cursor-glow { display: none; }
   .cta { padding: 40px 20px; }
+  .activity-ticker { left: 10px; right: 10px; bottom: 10px; max-width: none; }
+  .terminal { margin: 24px auto 0; }
 }
 </style>
 </head>
 <body>
 
+<div class="scroll-progress" id="scrollProgress"></div>
 <div class="cursor-glow" id="cursorGlow"></div>
 <div class="particles" id="particles"></div>
+<div class="activity-ticker" id="activityTicker"><div class="dot"></div><span id="tickerText"></span></div>
 
 <nav id="mainNav">
   <div class="container">
@@ -402,6 +465,7 @@ footer p { font-size: 13px; color: var(--text2); }
 <section class="hero">
   <div class="container">
     <div class="hero-badge" id="heroBadge"><span class="type-cursor" id="badgeText"></span></div>
+    <div style="font-size:14px;color:var(--text2);margin-bottom:8px;opacity:0;transition:opacity 0.6s" id="greeting"></div>
     <h1 id="heroH1"></h1>
     <p id="heroP">Senior full-stack developer with an AI-assisted workflow. I ship production React + Node.js apps in days that would take others months. Your idea, deployed and collecting payments.</p>
     <div class="hero-buttons">
@@ -413,6 +477,10 @@ footer p { font-size: 13px; color: var(--text2); }
       <div class="stat"><div class="stat-value" data-text="5-10x">0x</div><div class="stat-label">Faster Delivery</div></div>
       <div class="stat"><div class="stat-value" data-text="24h">0h</div><div class="stat-label">Response Time</div></div>
     </div>
+    <div class="terminal reveal" id="heroTerminal">
+      <div class="terminal-bar"><div class="terminal-dot r"></div><div class="terminal-dot y"></div><div class="terminal-dot g"></div></div>
+      <div class="terminal-body" id="terminalBody"></div>
+    </div>
   </div>
 </section>
 
@@ -422,37 +490,37 @@ footer p { font-size: 13px; color: var(--text2); }
     <div class="section-title reveal-left">What I Build</div>
     <div class="section-desc reveal-left">End-to-end development from idea to production. You tell me what you need, I make it real.</div>
     <div class="services-grid stagger">
-      <div class="service-card reveal" style="--i:0">
+      <div class="service-card tilt-card reveal" style="--i:0">
         <div class="service-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/><polyline points="7 8 10 11 7 14"/><line x1="13" y1="14" x2="17" y2="14"/></svg></div>
         <h3>Full-Stack Web Apps</h3>
         <p>Complete web applications with auth, database, API, admin panel, and deployment. React + TypeScript frontend, Node.js backend, PostgreSQL database.</p>
         <span class="service-price">$3,000 - $8,000</span><span class="service-time">5-14 days</span>
       </div>
-      <div class="service-card reveal" style="--i:1">
+      <div class="service-card tilt-card reveal" style="--i:1">
         <div class="service-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/><line x1="6" y1="15" x2="10" y2="15"/><line x1="14" y1="15" x2="16" y2="15"/></svg></div>
         <h3>Payment Integration</h3>
         <p>Stripe, crypto, or custom payment flows. Subscriptions, one-time payments, invoicing, split payments, webhooks. Production-ready and tested.</p>
         <span class="service-price">$1,500 - $3,000</span><span class="service-time">3-5 days</span>
       </div>
-      <div class="service-card reveal" style="--i:2">
+      <div class="service-card tilt-card reveal" style="--i:2">
         <div class="service-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg></div>
         <h3>Dashboards & Analytics</h3>
         <p>Real-time data visualization, admin dashboards, reporting tools. Charts, tables, filters, exports. Beautiful dark-mode UI included.</p>
         <span class="service-price">$2,000 - $5,000</span><span class="service-time">4-7 days</span>
       </div>
-      <div class="service-card reveal" style="--i:3">
+      <div class="service-card tilt-card reveal" style="--i:3">
         <div class="service-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
         <h3>Landing Pages</h3>
         <p>High-converting product and SaaS landing pages. Mobile-optimized, fast-loading, with analytics and A/B testing built in.</p>
         <span class="service-price">$600 - $1,500</span><span class="service-time">1-3 days</span>
       </div>
-      <div class="service-card reveal" style="--i:4">
+      <div class="service-card tilt-card reveal" style="--i:4">
         <div class="service-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a4 4 0 014 4v2a4 4 0 01-8 0V6a4 4 0 014-4z"/><path d="M16 14H8a4 4 0 00-4 4v2h16v-2a4 4 0 00-4-4z"/><circle cx="9" cy="7" r="0.5" fill="currentColor"/><circle cx="15" cy="7" r="0.5" fill="currentColor"/></svg></div>
         <h3>AI Integration</h3>
         <p>Add AI features to your product. Chatbots, content generation, smart search, automated workflows using Claude, GPT, or custom models.</p>
         <span class="service-price">$2,000 - $5,000</span><span class="service-time">3-7 days</span>
       </div>
-      <div class="service-card reveal" style="--i:5">
+      <div class="service-card tilt-card reveal" style="--i:5">
         <div class="service-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
         <h3>Blockchain / Web3</h3>
         <p>Solana and Ethereum frontends. Wallet connection, token dashboards, NFT marketplaces, on-chain analytics. Full Web3 stack.</p>
@@ -468,32 +536,32 @@ footer p { font-size: 13px; color: var(--text2); }
     <div class="section-title reveal-left">Shipped & Running</div>
     <div class="section-desc reveal-left">Real products in production. Not mockups. Not tutorials. Shipped code making money.</div>
     <div class="projects-grid stagger">
-      <div class="project-card reveal" style="--i:0">
+      <div class="project-card tilt-card reveal" style="--i:0">
         <h3>SnipeLink</h3>
         <div class="project-desc">Full-stack payment platform for freelancers. Invoicing, payment links, transaction management, client portal.</div>
         <div class="tech-tags"><span class="tech-tag">React</span><span class="tech-tag">TypeScript</span><span class="tech-tag">Node.js</span><span class="tech-tag">PostgreSQL</span><span class="tech-tag">Railway</span></div>
       </div>
-      <div class="project-card reveal" style="--i:1">
+      <div class="project-card tilt-card reveal" style="--i:1">
         <h3>SolAudit</h3>
         <div class="project-desc">Solana blockchain analytics tool. Real-time transaction monitoring, wallet analysis, smart contract auditing dashboard.</div>
         <div class="tech-tags"><span class="tech-tag">React</span><span class="tech-tag">Solana/Web3</span><span class="tech-tag">TypeScript</span><span class="tech-tag">Node.js</span></div>
       </div>
-      <div class="project-card reveal" style="--i:2">
+      <div class="project-card tilt-card reveal" style="--i:2">
         <h3>SkyEar</h3>
         <div class="project-desc">Real-time signal monitoring platform. Live audio processing, visualization dashboards, alert systems, WebSocket streaming.</div>
         <div class="tech-tags"><span class="tech-tag">React</span><span class="tech-tag">WebSockets</span><span class="tech-tag">Node.js</span><span class="tech-tag">Real-Time</span></div>
       </div>
-      <div class="project-card reveal" style="--i:3">
+      <div class="project-card tilt-card reveal" style="--i:3">
         <h3>First Responder Analytics</h3>
         <div class="project-desc">Emergency services dashboard. Incident tracking, response time metrics, geographic heatmaps, automated reporting.</div>
         <div class="tech-tags"><span class="tech-tag">React</span><span class="tech-tag">Express</span><span class="tech-tag">PostgreSQL</span><span class="tech-tag">Data Viz</span></div>
       </div>
-      <div class="project-card reveal" style="--i:4">
+      <div class="project-card tilt-card reveal" style="--i:4">
         <h3>MixMaster Pro</h3>
         <div class="project-desc">Audio production platform. Real-time mixing, session management, collaboration features. Deployed on Railway.</div>
         <div class="tech-tags"><span class="tech-tag">React</span><span class="tech-tag">TypeScript</span><span class="tech-tag">Web Audio</span><span class="tech-tag">Railway</span></div>
       </div>
-      <div class="project-card reveal" style="--i:5">
+      <div class="project-card tilt-card reveal" style="--i:5">
         <h3>Agency Command</h3>
         <div class="project-desc">AI-powered freelance management. Autonomous job scraping, Claude-generated proposals, client pipeline, auto-invoicing.</div>
         <div class="tech-tags"><span class="tech-tag">React</span><span class="tech-tag">Express</span><span class="tech-tag">Claude API</span><span class="tech-tag">SQLite</span></div>
@@ -792,10 +860,13 @@ document.querySelectorAll('.project-card').forEach(card => {
   });
 });
 
-// ─── Nav Shadow on Scroll ───
+// ─── Nav Shadow + Scroll Progress ───
 const nav = document.getElementById('mainNav');
+const scrollBar = document.getElementById('scrollProgress');
 window.addEventListener('scroll', () => {
   nav.classList.toggle('scrolled', window.scrollY > 20);
+  const pct = (window.scrollY / (document.body.scrollHeight - window.innerHeight)) * 100;
+  scrollBar.style.width = pct + '%';
 }, { passive: true });
 
 // ─── Scroll Reveal (Intersection Observer) ───
@@ -850,6 +921,152 @@ async function submitLead(e) {
   btn.textContent = 'Send Project Request'; btn.disabled = false;
   btn.style.opacity = '1';
 }
+
+// ─── Time-Aware Greeting ───
+(function() {
+  const h = new Date().getHours();
+  const g = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : h < 21 ? 'Good evening' : 'Late night hacking?';
+  const el = document.getElementById('greeting');
+  el.textContent = g + ' — glad you\'re here.';
+  setTimeout(() => el.style.opacity = '1', 2000);
+})();
+
+// ─── 3D Tilt on Cards ───
+document.querySelectorAll('.tilt-card').forEach(card => {
+  card.addEventListener('mousemove', e => {
+    const r = card.getBoundingClientRect();
+    const x = (e.clientX - r.left) / r.width - 0.5;
+    const y = (e.clientY - r.top) / r.height - 0.5;
+    card.style.transform = `perspective(600px) rotateY(${x * 8}deg) rotateX(${y * -8}deg) translateY(-4px)`;
+  });
+  card.addEventListener('mouseleave', () => {
+    card.style.transform = 'perspective(600px) rotateY(0) rotateX(0) translateY(0)';
+    card.style.transition = 'transform 0.5s ease';
+  });
+  card.addEventListener('mouseenter', () => {
+    card.style.transition = 'transform 0.1s ease';
+  });
+});
+
+// ─── Magnetic CTA Button ───
+document.querySelectorAll('.btn-primary').forEach(btn => {
+  btn.addEventListener('mousemove', e => {
+    const r = btn.getBoundingClientRect();
+    const x = e.clientX - r.left - r.width / 2;
+    const y = e.clientY - r.top - r.height / 2;
+    btn.style.transform = `translate(${x * 0.15}px, ${y * 0.3}px)`;
+  });
+  btn.addEventListener('mouseleave', () => {
+    btn.style.transform = '';
+  });
+});
+
+// ─── Activity Ticker (Social Proof) ───
+(function() {
+  const activities = [
+    '<strong>SnipeLink</strong> — Payment processed $2,400',
+    '<strong>New client</strong> onboarded from portfolio site',
+    '<strong>Agency Command</strong> — 5 proposals auto-generated',
+    '<strong>SolAudit</strong> — 12 wallets scanned this hour',
+    '<strong>Deploy</strong> — Production build shipped to Railway',
+    '<strong>MixMaster Pro</strong> — Audio master delivered',
+    '<strong>Pipeline</strong> — Client moved to in_progress',
+    '<strong>Invoice</strong> — Deposit received via SnipeLink',
+    '<strong>SkyEar</strong> — Live monitoring 3 frequencies',
+    '<strong>Agent</strong> — Scraped 115 new job listings',
+  ];
+  const ticker = document.getElementById('activityTicker');
+  const text = document.getElementById('tickerText');
+  let idx = 0;
+  function showActivity() {
+    text.innerHTML = activities[idx];
+    ticker.classList.add('show');
+    setTimeout(() => {
+      ticker.classList.remove('show');
+      idx = (idx + 1) % activities.length;
+      setTimeout(showActivity, 2000);
+    }, 4000);
+  }
+  setTimeout(showActivity, 5000);
+})();
+
+// ─── Interactive Terminal ───
+(function() {
+  const body = document.getElementById('terminalBody');
+  const lines = [
+    { type: 'prompt', text: '~ $' },
+    { type: 'cmd', text: ' npx create-snipelink-app my-project', delay: 40 },
+    { type: 'newline' },
+    { type: 'output', text: 'Scaffolding project...', delay: 800 },
+    { type: 'newline' },
+    { type: 'success', text: 'Created React + Express + PostgreSQL app', delay: 600 },
+    { type: 'success', text: 'Added SnipeLink payment integration', delay: 400 },
+    { type: 'success', text: 'Configured Railway deployment', delay: 400 },
+    { type: 'success', text: 'AI agent initialized', delay: 400 },
+    { type: 'newline' },
+    { type: 'prompt', text: '~ $' },
+    { type: 'cmd', text: ' railway up', delay: 40 },
+    { type: 'newline' },
+    { type: 'output', text: 'Deploying to production...', delay: 1200 },
+    { type: 'success', text: 'Live at my-project.up.railway.app', delay: 600 },
+    { type: 'newline' },
+    { type: 'output', text: 'Total time: 4 minutes 23 seconds', delay: 500 },
+    { type: 'newline' },
+    { type: 'prompt', text: '~ $' },
+    { type: 'cursor' },
+  ];
+
+  let lineIdx = 0;
+  function runTerminal() {
+    if (lineIdx >= lines.length) {
+      // Loop: clear and restart after pause
+      setTimeout(() => {
+        body.innerHTML = '';
+        lineIdx = 0;
+        runTerminal();
+      }, 3000);
+      return;
+    }
+    const line = lines[lineIdx];
+    lineIdx++;
+    if (line.type === 'newline') {
+      body.innerHTML += '<br>';
+      setTimeout(runTerminal, 100);
+    } else if (line.type === 'cursor') {
+      body.innerHTML += '<span class="terminal-cursor"></span>';
+      setTimeout(() => { body.innerHTML = ''; lineIdx = 0; runTerminal(); }, 4000);
+    } else if (line.type === 'cmd') {
+      // Type out character by character
+      const span = document.createElement('span');
+      span.className = 'cmd';
+      body.appendChild(span);
+      let i = 0;
+      function typeChar() {
+        span.textContent += line.text[i];
+        i++;
+        if (i < line.text.length) setTimeout(typeChar, line.delay);
+        else setTimeout(runTerminal, 300);
+      }
+      typeChar();
+    } else {
+      const delay = line.delay || 0;
+      setTimeout(() => {
+        const span = document.createElement('span');
+        span.className = line.type;
+        span.textContent = line.text;
+        if (line.type === 'success') span.textContent = ' ' + line.text;
+        body.appendChild(span);
+        if (line.type !== 'prompt') body.innerHTML += '<br>';
+        setTimeout(runTerminal, 100);
+      }, delay);
+    }
+  }
+  // Start terminal when it scrolls into view
+  const termObs = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { runTerminal(); termObs.unobserve(e.target); } });
+  }, { threshold: 0.3 });
+  termObs.observe(document.getElementById('heroTerminal'));
+})();
 </script>
 </body>
 </html>
